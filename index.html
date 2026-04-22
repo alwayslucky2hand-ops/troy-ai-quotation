@@ -100,11 +100,45 @@
 
     svg { width: 18px; height: 18px; fill: currentColor; }
 
+    /* ============================================================
+       🍎 賈伯斯級・極致響應式手機排版 (UIUX 不妥協的完美微調) 
+       ============================================================ */
     @media (max-width: 768px) {
-      .grid-2 { grid-template-columns: 1fr; gap: 16px;}
-      .row-item, .row-module { grid-template-columns: 1fr; position: relative; padding-bottom: 40px;}
-      .del-btn { position: absolute; bottom: 10px; right: 16px; height: auto;}
-      .a4-preview-page { width: 100%; min-height: auto; padding: 15px;}
+      /* 1. 導覽列 (Navbar) 重構：上下堆疊，按鈕完美等分並排 */
+      .navbar { flex-direction: column; padding: 16px; gap: 16px; }
+      .nav-tabs { width: 100%; gap: 8px; }
+      .tab-btn { flex: 1; justify-content: center; font-size: 14px; padding: 10px 4px; }
+      .nav-actions { width: 100%; display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .nav-actions .sync-badge { grid-column: 1 / -1; justify-content: center; margin-bottom: 0; }
+      .nav-actions .btn { width: 100%; font-size: 14px; padding: 12px 0; margin: 0; text-align: center;}
+
+      /* 2. 基礎卡片與容器內距微調，增加呼吸感 */
+      .container { margin: 20px auto; padding: 0 12px; gap: 20px; }
+      .card { padding: 24px 16px; }
+      .grid-2 { grid-template-columns: 1fr; gap: 16px; }
+
+      /* 3. 模組與費用清單的手機佈局 (刪除鈕移至右下角不佔位) */
+      .row-item, .row-module { grid-template-columns: 1fr; position: relative; padding-bottom: 50px; }
+      .del-btn { position: absolute; bottom: 12px; right: 16px; height: auto; padding: 8px; background: #FFF0F0; border-radius: 8px; }
+
+      /* 4. Step 3 (預覽區) 操作列的垂直堆疊 (防止按鈕互擠) */
+      #step3 .section-title { flex-direction: column !important; align-items: stretch !important; gap: 16px; padding: 16px !important; }
+      #step3 .section-title > div { display: flex; flex-direction: column; gap: 12px !important; width: 100%; }
+      #step3 .section-title > div > button { width: 100%; justify-content: center; }
+
+      /* 5. Step 4 (發送區) 操作列垂直堆疊 */
+      #step4 div[style*="justify-content: space-between"] { flex-direction: column; gap: 12px; }
+      #step4 div[style*="justify-content: space-between"] button { width: 100%; justify-content: center; }
+
+      /* 6. 調閱區 (歷史資料) 搜尋列堆疊 */
+      #historyTab div[style*="display:flex"] { flex-direction: column !important; gap: 12px; }
+      #historyTab div[style*="display:flex"] button { width: 100%; justify-content: center; }
+
+      /* 7. A4 預覽畫面防破版 */
+      .a4-preview-page { width: 100%; min-height: auto; padding: 16px; border-radius: 12px; }
+      .party-block table tr { display: flex; flex-direction: column; gap: 16px; }
+      .party-block table td { width: 100% !important; text-align: left !important; display: flex; justify-content: space-between; align-items: center; }
+      .party-block table td > div { margin-right: 0 !important; }
     }
   </style>
 </head>
@@ -264,7 +298,7 @@
           [action](...args);
       });
     } else {
-      // 在外部環境 (如 Github Pages) 執行 (修正了驗證邏輯，避免被自己取代的文字給卡住！)
+      // 在外部環境 (如 Github Pages) 執行
       if (!WEB_APP_URL || WEB_APP_URL === "" || WEB_APP_URL.includes("請在此填入")) {
         alert("請先在程式碼中設定 WEB_APP_URL 才能在外部網域運作！");
         return Promise.reject("WEB_APP_URL not set");
