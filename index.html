@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    :root {
+      --apple-bg: #F5F5F7; --apple-card: #FFFFFF; --apple-text: #1D1D1F; 
+      --apple-blue: #0071E3; --apple-blue-hover: #0077ED; --apple-gray: #86868B; --apple-border: #D2D2D7;
+      --apple-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      --red-color: #FF3B30;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; }
+    body { background-color: var(--apple-bg); color: var(--apple-text); padding-bottom: 120px; font-size: 15px; -webkit-font-smoothing: antialiased; }
+    
+    .navbar { 
+      background: rgba(255,255,255,0.95); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+      padding: 12px 32px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.08); 
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-tabs { display: flex; gap: 16px; }
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+    .tab-btn { background: transparent; border: none; font-size: 15px; font-weight: 500; color: var(--apple-gray); padding: 8px 16px; cursor: pointer; border-radius: 6px; display:flex; align-items:center; gap:6px;}
+    .tab-btn:hover { color: var(--apple-text); }
+    .tab-btn.active { color: var(--apple-text); background: #E8E8ED; font-weight: 600; }
+    
+    /* 確保區塊互相隱藏 */
+    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 30px; }
+    
+    .card { background: var(--apple-card); border-radius: 16px; padding: 40px; box-shadow: var(--apple-shadow); border: 1px solid #E5E5EA; }
+    
+    .section-title { font-size: 20px; font-weight: 600; margin-bottom: 24px; border-bottom: 1px solid var(--apple-border); padding-bottom: 12px; display: flex; align-items: center; justify-content: space-between;}
+    .status-badge { display: inline-block; background: #E8F5E9; color: #2E7D32; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;}
+    .sync-badge { display: inline-block; color: var(--apple-blue); font-size: 13px; font-weight: 500; display: none; align-items: center; gap: 6px;}
+    
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--apple-gray); }
+    
+    textarea, input, select { 
+      width: 100%; padding: 14px; border: 1px solid var(--apple-border); border-radius: 8px; font-size: 15px; margin-bottom: 20px; 
+      background: #FAFAFC; 
+    }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.6; white-space: pre-wrap; font-family: inherit;}
+    textarea:focus, input:focus, select:focus { outline: none; border-color: var(--apple-blue); background: #FFFFFF; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+    .info-box { background: #FAFAFC; padding: 24px; border-radius: 12px; border: 1px solid var(--apple-border); }
+    
+    .btn { 
+      background: var(--apple-blue); color: #fff; border: none; padding: 12px 24px; border-radius: 6px; 
+      font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:hover { background: var(--apple-blue-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--apple-border); color: var(--apple-text); }
+    .btn-outline:hover { background: #F5F5F7; }
+    .btn-danger { background: transparent; border: 1px solid var(--red-color); color: var(--red-color); }
+    .btn-danger:hover { background: #FFF0F0; }
+    .btn-success { background: #34C759; } 
+    .btn-success:hover { background: #2EAD4E; }
+    
+    .row-item, .row-module { display: grid; gap: 12px; margin-bottom: 16px; align-items: stretch; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #E5E5EA;}
+    .row-module { grid-template-columns: 2fr 4fr 40px; }
+    .row-item { grid-template-columns: 2fr 3fr 1fr 1.5fr 40px; }
+    .row-item textarea, .row-module textarea, .row-item input { margin-bottom: 0; }
+    .del-btn { color: var(--apple-gray); cursor: pointer; display: flex; align-items: center; justify-content: center; height: 100%;}
+    .del-btn:hover { color: var(--red-color); }
+
+    #loader, #finalLoader, #cloudLoader { display: none; text-align: center; font-weight: 500; color: var(--apple-gray); padding: 20px; }
+    
+    .term-box { background: #FFFFFF; border: 1px solid var(--apple-border); padding: 20px; margin-bottom: 16px; border-radius: 8px;}
+    .term-box:focus-within { border-color: var(--apple-blue);}
+    .term-title-wrapper { display: flex; align-items: center; margin-bottom: 16px; }
+    .term-prefix { font-weight: 600; font-size: 15px; margin-right: 8px; color: var(--apple-blue); white-space: nowrap;}
+    .term-title { font-weight: 600; font-size: 15px; margin-bottom: 0; border: none; border-bottom: 1px solid #E5E5EA; border-radius: 0; padding: 4px 8px; background: transparent;}
+    .term-title:focus { border-color: var(--apple-blue); }
+    .term-clause { width: 100%; font-size: 14px; line-height: 1.8; min-height: 120px;}
+
+    .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid var(--apple-border);}
+    .history-table th, .history-table td { padding: 14px; border-bottom: 1px solid var(--apple-border); text-align: left; }
+    .history-table th { background: #FAFAFC; font-weight: 500; color: var(--apple-gray);}
+    .edit-link { color: var(--apple-blue); cursor: pointer; font-weight: 500; }
+
+    /* A4 預覽專用樣式 */
+    .a4-preview-page {
+      width: 210mm; min-height: 297mm; background: white; margin: 0 auto 30px;
+      padding: 20mm; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 4px;
+      color: #1d1d1f; font-size: 14px; box-sizing: border-box; line-height: 1.6; position: relative; overflow: hidden; border: 1px solid #E5E5EA;
+    }
+    .a4-preview-page h2 { text-align: center; font-size: 24px; border-bottom: 2px solid #1d1d1f; padding-bottom: 12px; margin-bottom: 24px; letter-spacing: 2px;}
+    .a4-preview-page h3 { font-size: 16px; border-bottom: 1px solid #d2d2d7; padding-bottom: 6px; margin-top: 25px; margin-bottom: 15px;}
+    .a4-preview-page table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; word-wrap: break-word;}
+    .a4-preview-page th, .a4-preview-page td { border: 1px solid #c6c6c8; padding: 12px; text-align: left; vertical-align: top;}
+    .a4-preview-page th { background: #f5f5f7; font-weight: bold; border-bottom: 2px solid #86868b; color: #1d1d1f;}
+    
+    .party-block { border: 2px solid #1d1d1f; padding: 30px; margin-bottom: 40px; border-radius: 4px;}
+    .party-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid #1d1d1f; padding-bottom: 10px; margin-bottom: 20px; color: #1d1d1f; }
+    .seal-box-big { border: 2px solid #d2d2d7; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; color: #86868b; font-size: 16px; font-weight: bold; border-radius: 4px;}
+    .seal-box-small { border: 2px dashed #d2d2d7; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; color: #86868b; font-size: 14px; align-self: flex-end; border-radius: 4px;}
+
+    svg { width: 18px; height: 18px; fill: currentColor; }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; gap: 16px;}
+      .row-item, .row-module { grid-template-columns: 1fr; position: relative; padding-bottom: 40px;}
+      .del-btn { position: absolute; bottom: 10px; right: 16px; height: auto;}
+      .a4-preview-page { width: 100%; min-height: auto; padding: 15px;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('editTab', this)">
+      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> 撰寫與編輯
+    </button>
+    <button class="tab-btn" onclick="switchTab('historyTab', this); loadHistory();">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/><path d="M7 12h10v2H7zm0-4h10v2H7zm0 8h7v2H7z"/></svg> 調閱資料
+    </button>
+  </div>
+  <div class="nav-actions">
+    <span class="sync-badge" id="syncBadge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 儲存完成</span>
+    <button class="btn btn-danger" onclick="clearData()">清空資料</button>
+    <button class="btn" onclick="manualSave()">儲存當前進度</button>
+  </div>
+</div>
+
+<div id="editTab" class="tab-content active container">
+  
+  <input type="hidden" id="currentQuoteId">
+  <input type="hidden" id="currentClientId">
+
+  <div class="card" id="step1">
+    <div class="section-title">
+      <div>Step 1. 語音輸入與分析 <span class="status-badge" id="editBadge" style="display:none;">編輯模式</span></div>
+    </div>
+    <div class="grid-2">
+      <div><label>會議語音逐字稿</label><textarea id="transcript" style="height: 200px;"></textarea></div>
+      <div><label>手打重點摘要 / 特殊承諾</label><textarea id="manualSummary" style="height: 200px;"></textarea></div>
+    </div>
+    <div id="loader">核心 AI 萃取中...</div>
+    <div style="text-align: right;"><button class="btn btn-outline" onclick="generateAI()">下一步：智能萃取與建構</button></div>
+  </div>
+
+  <div class="card" id="step2" style="display:none;">
+    <div class="section-title">Step 2. 審閱與編輯合約</div>
+    
+    <div style="margin-bottom: 30px;">
+      <label>專案類型</label>
+      <select id="pType" style="margin-bottom: 24px;">
+        <option value="系統開發">系統開發</option>
+        <option value="企業內訓">企業內訓</option>
+      </select>
+      <label>專案/課程需求摘要</label>
+      <textarea id="summary" style="min-height: 250px;" placeholder="請在此輸入專案或課程的核心需求摘要..."></textarea>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 30px;">
+      <div class="info-box">
+        <h3 style="margin-bottom: 20px; font-size: 15px; border-bottom: 1px solid #D2D2D7; padding-bottom: 8px;">甲方 (委託方)</h3>
+        <label>公司名/客戶名</label><textarea id="cName" style="min-height: 60px;"></textarea>
+        <label>統一編號/身分證號</label><input type="text" id="cTax">
+        <label>代表人</label><input type="text" id="cRep" placeholder="負責人姓名">
+        <label>聯繫人</label><input type="text" id="cPerson">
+        <label>聯繫電話</label><input type="text" id="cPhone">
+        <label>聯繫地址</label><textarea id="cAddress" style="min-height: 80px;"></textarea>
+        <label>Email (必填，用於寄送合約)</label><input type="text" id="cEmail" style="border: 1px solid var(--apple-blue); background: #F0F8FF;">
+      </div>
+      <div class="info-box">
+        <h3 style="margin-bottom: 20px; font-size: 15px; border-bottom: 1px solid #D2D2D7; padding-bottom: 8px;">乙方 (執行方)</h3>
+        <label>公司名/客戶名</label><textarea id="myCompany" style="min-height: 60px;">賦活再續股份有限公司</textarea>
+        <label>統一編號/身分證號</label><input type="text" id="myTax" value="93586750">
+        <label>代表人</label><input type="text" id="myRep" value="林東岳">
+        <label>聯繫人</label><input type="text" id="myPerson" value="林東岳 (Troy)">
+        <label>聯繫電話</label><input type="text" id="myPhone" placeholder="您的電話">
+        <label>聯繫地址</label><textarea id="myAddress" style="min-height: 80px;" placeholder="您的地址"></textarea>
+        <label>Email</label><input type="text" id="myEmail" placeholder="您的 Email">
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <label>系統功能模組 / 課程大綱</label>
+      <div id="moduleList"></div>
+      <button class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;" onclick="addModuleRow()">+ 新增項目</button>
+    </div>
+
+    <div style="margin-top: 30px;">
+      <label>報價與費用明細 (自動計稅)</label>
+      <div id="pricingList"></div>
+      <button class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;" onclick="addPricingRow()">+ 新增費用</button>
+    </div>
+
+    <div style="margin-top: 30px;">
+      <label style="color: var(--apple-text); font-size: 15px;">專業律師約定條款</label>
+      <div id="legalTermsContainer"></div>
+    </div>
+
+    <div style="text-align: right; margin-top: 30px;"><button class="btn" onclick="goToStep3()">預覽 A4 排版</button></div>
+  </div>
+
+  <div class="card" id="step3" style="display:none; background: transparent; box-shadow: none; border: none; padding: 0;">
+    <div class="section-title" style="background: white; padding: 24px; border-radius: 8px; box-shadow: var(--apple-shadow); display:flex; justify-content: space-between;">
+      <span>Step 3. A4 合約排版預覽</span>
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-outline" onclick="backToStep2()">返回修改</button>
+        <button class="btn btn-success" onclick="uploadToDrive()">產生 PDF 儲存至雲端</button>
+        <button class="btn" onclick="goToStep4()">前往撰寫 Email</button>
+      </div>
+    </div>
+    
+    <div id="cloudLoader">正在將 PDF 寫入 Google Drive 並設定權限，請稍候...</div>
+    <div id="pdfUrlDisplay" style="display:none; text-align:center; padding: 15px; background: #F5F5F7; border-radius: 8px; margin-top: 15px; font-weight:500;">
+      雲端 PDF 連結已建立：<a id="cloudLink" href="#" target="_blank" style="color: var(--apple-blue); text-decoration: none;">點此查看檔案</a>
+    </div>
+
+    <div id="pdfPreviewContainer" style="margin-top: 24px; overflow-x: auto;"></div>
+
+    <div style="text-align: right; margin-top: 30px; background: white; padding: 24px; border-radius: 8px; box-shadow: var(--apple-shadow);">
+      <button class="btn" onclick="goToStep4()">預覽無誤，前往撰寫 Email</button>
+    </div>
+  </div>
+
+  <div class="card" id="step4" style="display:none;">
+    <div class="section-title">Step 4. 確認 Email 並發送</div>
+    <label>Email 主旨</label><input type="text" id="emailSubject" style="font-weight: 500;">
+    <label>Email 內文</label><textarea id="emailBody" style="height: 250px;"></textarea>
+    <div id="finalLoader">正在封裝 PDF 並進行最終儲存寄發...</div>
+    <div style="text-align: right; margin-top: 24px; display: flex; justify-content: space-between;">
+      <button class="btn btn-outline" onclick="backToStep3()">返回預覽 PDF</button>
+      <button class="btn btn-success" onclick="saveAndSendFinal()">最終儲存並發送</button>
+    </div>
+  </div>
+</div>
+
+<div id="historyTab" class="tab-content container">
+  <div class="card">
+    <div class="section-title">歷史合約調閱</div>
+    <div style="display:flex; gap:10px; margin-bottom: 24px;">
+      <input type="text" id="searchKw" placeholder="輸入客戶名稱或單號..." style="margin:0;">
+      <button class="btn" onclick="loadHistory()">搜尋</button>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="history-table">
+        <thead><tr><th>更新時間</th><th>單號</th><th>類型</th><th>客戶名稱</th><th>總金額(未稅)</th><th>操作</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 🌍 全域設定：若要部署到 Github Pages 等外部網域，請將下方替換為你的 GAS Web App URL
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyO0kJP922EUUhjK4cFiK6cVVt_Lwzi-B-ik2FLiwGTXPI7SV2mINB0hvpry8uuh6b-/exec";
+
+  // 🚀 核心通訊橋樑：自動判斷環境 (GAS 內建 or 外部呼叫)
+  async function apiCall(action, ...args) {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      // 在 GAS 環境執行
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          [action](...args);
+      });
+    } else {
+      // 在外部環境 (如 Github Pages) 執行
+      if (WEB_APP_URL === "請在此填入部署後的_GAS_網頁應用程式_URL" || !WEB_APP_URL) {
+        alert("請先在程式碼中設定 WEB_APP_URL 才能在外部網域運作！");
+        return Promise.reject("WEB_APP_URL not set");
+      }
+      try {
+        const response = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避開 CORS Preflight 問題
+          body: JSON.stringify({ action: action, args: args })
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+          return result.data;
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (e) {
+        console.error("API Call Error:", e);
+        alert("連線發生錯誤：" + e.message);
+        throw e;
+      }
+    }
+  }
+
+  // ================= 以下為你原本一字不漏的前端邏輯 (呼叫方式已升級為 apiCall) =================
+
+  let currentTerms = [];
+  let currentTotal = 0;
+  let generatedPdfUrl = ''; 
+  
+  const chineseNums = ["零","一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十"];
+
+  // 頁籤切換邏輯：點擊任意一區，另一區就會瞬間乾淨隱藏
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function addModuleRow(name='', desc='') {
+    const div = document.createElement('div'); div.className = 'row-module';
+    div.innerHTML = `<textarea class="m-name" placeholder="模組/單元名稱">${name}</textarea><textarea class="m-desc" placeholder="功能/課程詳述">${desc}</textarea><span class="del-btn" onclick="this.parentElement.remove();"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>`;
+    document.getElementById('moduleList').appendChild(div);
+  }
+  function addPricingRow(name='', desc='', qty=1, price=0) {
+    const div = document.createElement('div'); div.className = 'row-item';
+    div.innerHTML = `<textarea class="p-name" placeholder="費用項目">${name}</textarea><textarea class="p-desc" placeholder="規格說明">${desc}</textarea><input type="number" class="p-qty" value="${qty}" placeholder="數量"><input type="number" class="p-price" value="${price}" placeholder="單價"><span class="del-btn" onclick="this.parentElement.remove();"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>`;
+    document.getElementById('pricingList').appendChild(div);
+  }
+
+  function saveDraftLocally() {
+    document.querySelectorAll('.term-box').forEach(box => {
+      const idx = box.getAttribute('data-index');
+      if(currentTerms[idx]){
+        currentTerms[idx].title = box.querySelector('.term-title').value;
+        currentTerms[idx].clauses = box.querySelector('.term-clause').value.split('\n').filter(c => c.trim() !== '');
+      }
+    });
+
+    const draft = {
+      transcript: document.getElementById('transcript').value, manualSummary: document.getElementById('manualSummary').value,
+      pType: document.getElementById('pType').value, summary: document.getElementById('summary').value,
+      cName: document.getElementById('cName').value, cTax: document.getElementById('cTax').value, cRep: document.getElementById('cRep').value,
+      cPerson: document.getElementById('cPerson').value, cPhone: document.getElementById('cPhone').value,
+      cAddress: document.getElementById('cAddress').value, cEmail: document.getElementById('cEmail').value,
+      myCompany: document.getElementById('myCompany').value, myTax: document.getElementById('myTax').value, myRep: document.getElementById('myRep').value,
+      myPerson: document.getElementById('myPerson').value, myPhone: document.getElementById('myPhone').value,
+      myAddress: document.getElementById('myAddress').value, myEmail: document.getElementById('myEmail').value,
+      emailSubject: document.getElementById('emailSubject').value, emailBody: document.getElementById('emailBody').value,
+      modules: [], pricing: [], legalTerms: currentTerms, pdfUrl: generatedPdfUrl,
+      step2Visible: document.getElementById('step2').style.display === 'block',
+      step3Visible: document.getElementById('step3').style.display === 'block',
+      step4Visible: document.getElementById('step4').style.display === 'block'
+    };
+    
+    document.querySelectorAll('.row-module').forEach(r => { draft.modules.push({name: r.querySelector('.m-name').value, desc: r.querySelector('.m-desc').value}); });
+    document.querySelectorAll('.row-item').forEach(r => { draft.pricing.push({name: r.querySelector('.p-name').value, desc: r.querySelector('.p-desc').value, qty: r.querySelector('.p-qty').value, price: r.querySelector('.p-price').value}); });
+    
+    localStorage.setItem('gx_full_draft', JSON.stringify(draft));
+  }
+
+  window.onload = () => {
+    const draftJson = localStorage.getItem('gx_full_draft');
+    if(draftJson) {
+      const draft = JSON.parse(draftJson);
+      document.getElementById('transcript').value = draft.transcript || '';
+      document.getElementById('manualSummary').value = draft.manualSummary || '';
+      generatedPdfUrl = draft.pdfUrl || '';
+      
+      if(draft.step2Visible) {
+        document.getElementById('step2').style.display = 'block';
+        document.getElementById('pType').value = draft.pType || '系統開發';
+        document.getElementById('summary').value = draft.summary || '';
+        document.getElementById('cName').value = draft.cName || ''; document.getElementById('cTax').value = draft.cTax || ''; document.getElementById('cRep').value = draft.cRep || '';
+        document.getElementById('cPerson').value = draft.cPerson || ''; document.getElementById('cPhone').value = draft.cPhone || '';
+        document.getElementById('cAddress').value = draft.cAddress || ''; document.getElementById('cEmail').value = draft.cEmail || '';
+        
+        if(draft.myCompany) document.getElementById('myCompany').value = draft.myCompany;
+        if(draft.myPhone) document.getElementById('myPhone').value = draft.myPhone;
+        if(draft.myAddress) document.getElementById('myAddress').value = draft.myAddress;
+        
+        document.getElementById('emailSubject').value = draft.emailSubject || ''; document.getElementById('emailBody').value = draft.emailBody || '';
+        
+        document.getElementById('moduleList').innerHTML = ''; if(draft.modules) draft.modules.forEach(m => addModuleRow(m.name, m.desc));
+        document.getElementById('pricingList').innerHTML = ''; if(draft.pricing) draft.pricing.forEach(p => addPricingRow(p.name, p.desc, p.qty, p.price));
+        
+        currentTerms = draft.legalTerms || []; renderTerms();
+      }
+      if(draft.step3Visible) { goToStep3(); }
+      if(draft.step4Visible) { goToStep4(); }
+    }
+  };
+
+  // 手動儲存功能 
+  function manualSave() {
+    saveDraftLocally();
+    const data = collectDataForBackend(false);
+    const badge = document.getElementById('syncBadge');
+    badge.style.display = 'flex';
+    badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/></svg> 儲存中...';
+    
+    // 透過橋樑呼叫
+    apiCall('saveContractToDatabase', data).then(id => {
+       document.getElementById('currentQuoteId').value = id; 
+       badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 儲存完成';
+       setTimeout(() => badge.style.display = 'none', 3000);
+    }).catch(e => console.error("儲存失敗：", e));
+  }
+
+  // 無痕清空資料功能 (防當機白屏，深度 DOM 重置)
+  function clearData() {
+    localStorage.removeItem('gx_full_draft');
+    
+    document.getElementById('transcript').value = '';
+    document.getElementById('manualSummary').value = '';
+    
+    document.getElementById('pType').value = '系統開發';
+    document.getElementById('summary').value = '';
+    document.getElementById('cName').value = '';
+    document.getElementById('cTax').value = '';
+    document.getElementById('cRep').value = '';
+    document.getElementById('cPerson').value = '';
+    document.getElementById('cPhone').value = '';
+    document.getElementById('cAddress').value = '';
+    document.getElementById('cEmail').value = '';
+    
+    document.getElementById('myCompany').value = '賦活再續股份有限公司';
+    document.getElementById('myTax').value = '93586750';
+    document.getElementById('myRep').value = '林東岳';
+    document.getElementById('myPerson').value = '林東岳 (Troy)';
+    document.getElementById('myPhone').value = '';
+    document.getElementById('myAddress').value = '';
+    document.getElementById('myEmail').value = '';
+    
+    document.getElementById('moduleList').innerHTML = '';
+    document.getElementById('pricingList').innerHTML = '';
+    document.getElementById('legalTermsContainer').innerHTML = '';
+    currentTerms = [];
+    
+    document.getElementById('emailSubject').value = '';
+    document.getElementById('emailBody').value = '';
+    
+    document.getElementById('currentQuoteId').value = '';
+    document.getElementById('currentClientId').value = '';
+    generatedPdfUrl = '';
+    document.getElementById('pdfUrlDisplay').style.display = 'none';
+    
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('step4').style.display = 'none';
+    document.getElementById('editBadge').style.display = 'none';
+    
+    switchTab('editTab', document.querySelector('.tab-btn'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function generateAI() {
+    const t = document.getElementById('transcript').value; const s = document.getElementById('manualSummary').value;
+    if(!t) return alert("請輸入逐字稿");
+    document.getElementById('loader').style.display = 'block';
+    
+    // 透過橋樑呼叫
+    apiCall('processContractWithGemini', t, s).then(data => {
+      document.getElementById('loader').style.display = 'none';
+      if(data.error) return alert(data.error);
+
+      document.getElementById('step2').style.display = 'block';
+      document.getElementById('pType').value = data.projectType.includes('內訓') ? '企業內訓' : '系統開發';
+      document.getElementById('cName').value = data.clientName || ''; document.getElementById('cTax').value = data.taxId || ''; document.getElementById('cRep').value = data.cRep || '';
+      document.getElementById('cPerson').value = data.contactPerson || ''; document.getElementById('cPhone').value = data.clientPhone || '';
+      document.getElementById('cAddress').value = data.clientAddress || ''; document.getElementById('cEmail').value = data.clientEmail || '';
+      document.getElementById('summary').value = data.summary || '';
+      
+      document.getElementById('moduleList').innerHTML = ''; if(data.modules) data.modules.forEach(m => addModuleRow(m.name, m.desc));
+      document.getElementById('pricingList').innerHTML = ''; if(data.pricing) data.pricing.forEach(p => addPricingRow(p.name, p.desc, p.qty, p.price));
+      
+      currentTerms = data.legalTerms || []; renderTerms();
+      if(data.emailDraft) { document.getElementById('emailSubject').value = data.emailDraft.subject; document.getElementById('emailBody').value = data.emailDraft.body; }
+      
+      manualSave(); 
+      document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+    }).catch(e => {
+      document.getElementById('loader').style.display = 'none';
+    });
+  }
+
+  function renderTerms() {
+    document.getElementById('legalTermsContainer').innerHTML = currentTerms.map((term, index) => `
+      <div class="term-box" data-index="${index}">
+        <div class="term-title-wrapper">
+          <span class="term-prefix">第${chineseNums[index+1] || (index+1)}條：</span>
+          <input type="text" class="term-title" value="${term.title.replace(/^第.*?條[：\:]?\s*/, '')}">
+        </div>
+        <textarea class="term-clause">${term.clauses.join('\n')}</textarea>
+      </div>
+    `).join('');
+  }
+
+  function collectDataForBackend(isFinal) {
+    saveDraftLocally();
+    const draft = JSON.parse(localStorage.getItem('gx_full_draft'));
+    const data = {
+      quoteId: document.getElementById('currentQuoteId').value, clientId: document.getElementById('currentClientId').value,
+      projectType: draft.pType, clientName: draft.cName, taxId: draft.cTax, contactPerson: draft.cPerson, cRep: draft.cRep,
+      clientPhone: draft.cPhone, clientEmail: draft.cEmail, clientAddress: draft.cAddress,
+      myCompany: draft.myCompany, myTax: draft.myTax, myRep: draft.myRep, myPerson: draft.myPerson, myPhone: draft.myPhone, myAddress: draft.myAddress,
+      summary: draft.summary, legalTerms: draft.legalTerms, transcript: draft.transcript, manualSummary: draft.manualSummary, 
+      modules: draft.modules, pricing: draft.pricing, total: 0, isFinalAction: isFinal, pdfUrl: generatedPdfUrl
+    };
+    draft.pricing.forEach(p => data.total += (p.qty * p.price));
+    return data;
+  }
+
+  function backToStep2() {
+    document.getElementById('step3').style.display = 'none'; document.getElementById('step4').style.display = 'none';
+    document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function uploadToDrive() {
+    document.getElementById('cloudLoader').style.display = 'block';
+    const data = collectDataForBackend(false);
+    
+    // 透過橋樑呼叫
+    apiCall('savePDFToDrive', data, document.getElementById('currentQuoteId').value || '草案').then(res => {
+      document.getElementById('cloudLoader').style.display = 'none';
+      if(res.success) {
+        generatedPdfUrl = res.url;
+        document.getElementById('pdfUrlDisplay').style.display = 'block';
+        document.getElementById('cloudLink').href = res.url;
+        
+        let body = document.getElementById('emailBody').value;
+        if(!body.includes('合約檔案雲端連結')) {
+           document.getElementById('emailBody').value = body + `\n\n合約檔案雲端連結已為您備妥：\n${res.url}\n`;
+        }
+        manualSave(); 
+        alert("PDF 成功寫入 Google Drive，連結已填入 Email 內文！");
+      } else { alert(res.msg); }
+    }).catch(e => {
+      document.getElementById('cloudLoader').style.display = 'none';
+    });
+  }
+
+  function goToStep3() {
+    const data = collectDataForBackend(false);
+    document.getElementById('step3').style.display = 'block';
+    
+    if(generatedPdfUrl) {
+      document.getElementById('pdfUrlDisplay').style.display = 'block';
+      document.getElementById('cloudLink').href = generatedPdfUrl;
+    }
+    
+    const docTitle = data.projectType === '企業內訓' ? 'GrowthX｜企業內訓課程報價單暨服務協議' : 'GrowthX｜系統開發專案協議暨報價單';
+    const modTitle = data.projectType === '企業內訓' ? '課程單元與內容大綱' : '系統功能模組與開發範圍';
+    
+    let total = 0;
+    const pricingHtml = data.pricing.map(p => {
+      const q = parseInt(p.qty)||0; const pr = parseInt(p.price)||0; total += (q*pr);
+      return `<tr><td><b>${p.name.replace(/\n/g, '<br>')}</b></td><td>${p.desc.replace(/\n/g, '<br>')}</td><td style="text-align:center">${q}</td><td style="text-align:right">$${pr.toLocaleString()}</td><td style="text-align:right">$${(q*pr).toLocaleString()}</td></tr>`;
+    }).join('');
+    
+    currentTotal = total;
+    const taxAmount = Math.round(total * 0.05);
+    const grandTotal = total + taxAmount;
+
+    const termsHtml = data.legalTerms.map((t, index) => `
+      <div style="margin-bottom: 22px;">
+        <h4 style="margin: 5px 0; font-size: 15px;">第${chineseNums[index+1] || (index+1)}條：${t.title}</h4>
+        ${t.clauses.map(c => `<div style="padding-left: 15px; margin-bottom: 6px; text-align: justify;">${c}</div>`).join('')}
+      </div>
+    `).join('');
+
+    const rocYear = new Date().getFullYear() - 1911;
+    const rocDate = `中華民國 ${rocYear} 年 ${new Date().getMonth() + 1} 月 ${new Date().getDate()} 日`;
+
+    const container = document.getElementById('pdfPreviewContainer');
+    container.innerHTML = `
+      <div class="a4-preview-page">
+        <h2>${docTitle}</h2>
+        <table style="width: 100%; border: none; margin-bottom: 24px; table-layout: fixed; border-spacing: 0;">
+          <tr>
+            <td style="border: none; width: 48%; padding: 20px; background-color: #f8f9fa; border-radius: 8px; vertical-align: top; font-size: 13px; line-height: 1.8;">
+              <b style="font-size: 15px; border-bottom: 2px solid #1D1D1F; padding-bottom: 4px; display: inline-block; margin-bottom: 12px; color: #1d1d1f;">甲方 (委託方)</b><br>
+              <b>公司名：</b>${data.clientName}<br><b>統編：</b>${data.taxId}<br><b>地址：</b>${data.clientAddress.replace(/\n/g, '<br>')}<br><b>聯繫人：</b>${data.contactPerson}
+            </td>
+            <td style="border: none; width: 4%;"></td>
+            <td style="border: none; width: 48%; padding: 20px; background-color: #f8f9fa; border-radius: 8px; vertical-align: top; font-size: 13px; line-height: 1.8;">
+              <b style="font-size: 15px; border-bottom: 2px solid #1D1D1F; padding-bottom: 4px; display: inline-block; margin-bottom: 12px; color: #1d1d1f;">乙方 (執行方)</b><br>
+              <b>公司名：</b>${data.myCompany}<br><b>統編：</b>${data.myTax}<br><b>地址：</b>${data.myAddress.replace(/\n/g, '<br>')}<br><b>單號：</b>${document.getElementById('currentQuoteId').value || '草案預覽'}
+            </td>
+          </tr>
+        </table>
+        
+        <h3>一、 ${modTitle}</h3>
+        <table><tr><th width="25%">項目名稱</th><th>詳述與規格</th></tr>${data.modules.map(m => `<tr><td><b>${m.name.replace(/\n/g, '<br>')}</b></td><td>${m.desc.replace(/\n/g, '<br>')}</td></tr>`).join('')}</table>
+        
+        <h3>二、 專案費用明細</h3>
+        <table><tr><th>費用項目</th><th>規格說明</th><th width="50" style="text-align:center">數量</th><th width="80" style="text-align:right">單價</th><th width="80" style="text-align:right">小計</th></tr>${pricingHtml}</table>
+        
+        <div style="text-align: right; border:none; font-size: 14px; margin-top: 10px; line-height: 1.8;">
+          <div>銷售額合計 (未稅)：$ ${total.toLocaleString()}</div>
+          <div>營業稅 (5%)：$ ${taxAmount.toLocaleString()}</div>
+          <div style="font-size: 18px; font-weight: bold; margin-top: 8px;">總金額 (含稅)：$ ${grandTotal.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div class="a4-preview-page">
+        <h2 style="border:none; text-align:left; font-size: 18px; border-bottom: 2px solid #000;">三、 專業約定條款</h2>
+        <div style="margin-top: 20px;">${termsHtml}</div>
+      </div>
+
+      <div class="a4-preview-page">
+        <h2 style="border:none; text-align:left; font-size: 18px; border-bottom: 2px solid #000;">四、 雙方簽署確認</h2>
+        <p style="text-align: justify; margin-bottom: 30px; margin-top: 15px;">本合約正本壹式貳份，由甲乙雙方各執壹份為憑。自雙方簽署或蓋章之日起正式生效。</p>
+        
+        <div class="party-block">
+          <div class="party-title">甲方 (委託方) 簽署區</div>
+          <table style="width: 100%; border: none; margin: 0; padding: 0; table-layout: fixed;">
+            <tr>
+              <td style="border: none; padding: 0; line-height: 2; vertical-align: top; width: 60%; font-size: 14px;">
+                <b>公司名：</b>${data.clientName}<br><b>統編：</b>${data.taxId}<br><b>代表人：</b>${data.cRep || ''}<br><b>聯繫人：</b>${data.contactPerson}<br><b>電話：</b>${data.clientPhone}<br><b>地址：</b>${data.clientAddress.replace(/\n/g, '<br>')}
+              </td>
+              <td style="border: none; padding: 0; text-align: right; vertical-align: bottom; width: 40%;">
+                <div class="seal-box-big" style="display:inline-flex; margin-right:15px;">公司大章</div>
+                <div class="seal-box-small" style="display:inline-flex;">負責人章</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="party-block">
+          <div class="party-title">乙方 (執行方) 簽署區</div>
+          <table style="width: 100%; border: none; margin: 0; padding: 0; table-layout: fixed;">
+            <tr>
+              <td style="border: none; padding: 0; line-height: 2; vertical-align: top; width: 60%; font-size: 14px;">
+                <b>公司名：</b>${data.myCompany}<br><b>統編：</b>${data.myTax}<br><b>代表人：</b>${data.myRep}<br><b>聯繫人：</b>${data.myPerson}<br><b>電話：</b>${data.myPhone}<br><b>地址：</b>${data.myAddress.replace(/\n/g, '<br>')}
+              </td>
+              <td style="border: none; padding: 0; text-align: right; vertical-align: bottom; width: 40%;">
+                <div class="seal-box-big" style="display:inline-flex; margin-right:15px;">公司大章</div>
+                <div class="seal-box-small" style="display:inline-flex;">負責人章</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="text-align: center; margin-top: 50px; font-size: 18px; font-weight: bold; letter-spacing: 2px;">簽署日期： ${rocDate}</div>
+      </div>
+    `;
+    
+    document.getElementById('step3').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function backToStep3() {
+    document.getElementById('step4').style.display = 'none';
+    document.getElementById('step3').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function goToStep4() {
+    document.getElementById('step4').style.display = 'block';
+    document.getElementById('step4').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function saveAndSendFinal() {
+    const emailSubject = document.getElementById('emailSubject').value || '報價單暨合約確認';
+    const emailBody = document.getElementById('emailBody').value || '請查閱附件PDF。';
+    
+    document.getElementById('finalLoader').style.display = 'block';
+    const data = collectDataForBackend(true); 
+
+    // 透過橋樑呼叫
+    apiCall('saveContractToDatabase', data).then(savedQuoteId => {
+      apiCall('sendEmailWithPDF', data, emailSubject, emailBody, savedQuoteId).then(result => {
+        document.getElementById('finalLoader').style.display = 'none';
+        alert(result.msg); 
+        clearData(); 
+      }).catch(e => {
+        document.getElementById('finalLoader').style.display = 'none';
+      });
+    }).catch(e => {
+      document.getElementById('finalLoader').style.display = 'none';
+    }); 
+  }
+
+  function loadHistory() {
+    const kw = document.getElementById('searchKw').value;
+    document.getElementById('historyBody').innerHTML = '<tr><td colspan="6">載入中...</td></tr>';
+    
+    // 透過橋樑呼叫
+    apiCall('searchQuotations', kw).then(res => {
+      document.getElementById('historyBody').innerHTML = res.map(r => `<tr><td>${r.date}</td><td>${r.quoteId}</td><td>${r.type}</td><td>${r.clientName}</td><td>$${r.total.toLocaleString()}</td><td><span class="edit-link" onclick="editQuote('${r.quoteId}', '${r.clientId}')">編輯調閱</span></td></tr>`).join('');
+    }).catch(e => {
+      document.getElementById('historyBody').innerHTML = '<tr><td colspan="6" style="color:red;">讀取失敗</td></tr>';
+    });
+  }
+
+  function editQuote(quoteId, clientId) {
+    document.getElementById('historyBody').innerHTML = '<tr><td colspan="6">正在調閱資料，請稍候...</td></tr>';
+    
+    // 透過橋樑呼叫
+    apiCall('getQuotationDetail', quoteId, clientId).then(data => {
+      switchTab('editTab', document.querySelector('.tab-btn'));
+      document.getElementById('editBadge').style.display = 'inline-block';
+      
+      document.getElementById('currentQuoteId').value = data.quoteId; document.getElementById('currentClientId').value = data.clientId;
+      document.getElementById('step2').style.display = 'block';
+
+      document.getElementById('transcript').value = data.transcript || ''; document.getElementById('manualSummary').value = data.manualSummary || '';
+      document.getElementById('pType').value = data.projectType; document.getElementById('summary').value = data.summary;
+      document.getElementById('cName').value = data.clientName; document.getElementById('cTax').value = data.taxId; document.getElementById('cRep').value = data.cRep || '';
+      document.getElementById('cPerson').value = data.contactPerson; document.getElementById('cPhone').value = data.clientPhone;
+      document.getElementById('cAddress').value = data.clientAddress; document.getElementById('cEmail').value = data.clientEmail;
+      
+      generatedPdfUrl = data.pdfUrl || '';
+      if(generatedPdfUrl) {
+         document.getElementById('pdfUrlDisplay').style.display = 'block';
+         document.getElementById('cloudLink').href = generatedPdfUrl;
+      }
+
+      document.getElementById('moduleList').innerHTML = ''; data.modules.forEach(m => addModuleRow(m.name, m.desc));
+      document.getElementById('pricingList').innerHTML = ''; data.pricing.forEach(p => addPricingRow(p.name, p.desc, p.qty, p.price));
+      
+      currentTerms = data.legalTerms || []; renderTerms();
+      saveDraftLocally(); 
+      document.getElementById('step1').scrollIntoView({ behavior: 'smooth' });
+    }).catch(e => {
+       document.getElementById('historyBody').innerHTML = '<tr><td colspan="6" style="color:red;">調閱失敗，請重試</td></tr>';
+    });
+  }
+</script>
+
+</body>
+</html>
