@@ -265,7 +265,7 @@
       });
     } else {
       // 在外部環境 (如 Github Pages) 執行
-      if (WEB_APP_URL === "請在此填入部署後的_GAS_網頁應用程式_URL" || !WEB_APP_URL) {
+      if (WEB_APP_URL === "https://script.google.com/macros/s/AKfycbyO0kJP922EUUhjK4cFiK6cVVt_Lwzi-B-ik2FLiwGTXPI7SV2mINB0hvpry8uuh6b-/exec" || !WEB_APP_URL) {
         alert("請先在程式碼中設定 WEB_APP_URL 才能在外部網域運作！");
         return Promise.reject("WEB_APP_URL not set");
       }
