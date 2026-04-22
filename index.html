@@ -264,8 +264,8 @@
           [action](...args);
       });
     } else {
-      // 在外部環境 (如 Github Pages) 執行
-      if (WEB_APP_URL === "https://script.google.com/macros/s/AKfycbyO0kJP922EUUhjK4cFiK6cVVt_Lwzi-B-ik2FLiwGTXPI7SV2mINB0hvpry8uuh6b-/exec" || !WEB_APP_URL) {
+      // 在外部環境 (如 Github Pages) 執行 (修正了驗證邏輯，避免被自己取代的文字給卡住！)
+      if (!WEB_APP_URL || WEB_APP_URL === "" || WEB_APP_URL.includes("請在此填入")) {
         alert("請先在程式碼中設定 WEB_APP_URL 才能在外部網域運作！");
         return Promise.reject("WEB_APP_URL not set");
       }
@@ -273,7 +273,8 @@
         const response = await fetch(WEB_APP_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避開 CORS Preflight 問題
-          body: JSON.stringify({ action: action, args: args })
+          body: JSON.stringify({ action: action, args: args }),
+          redirect: 'follow' // 確保可以跟隨 GAS 的轉址
         });
         const result = await response.json();
         if (result.status === 'success') {
@@ -289,7 +290,7 @@
     }
   }
 
-  // ================= 以下為你原本一字不漏的前端邏輯 (呼叫方式已升級為 apiCall) =================
+  // ================= 以下為前端邏輯 =================
 
   let currentTerms = [];
   let currentTotal = 0;
